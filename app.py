@@ -120,11 +120,12 @@ with tab2:
         print(date)
         url = sym_con.news[i].get('content', {}).get('canonicalUrl', {}).get('url')
         sentiment_scores = sia.polarity_scores(sym_con.news[i].get('content', {}).get('summary'))
+        st.write(sentiment_scores)
         data_news = {
             'Date': f'{date[0:10]}',
             'Title': f'{title[0:35]}...',
             'Link': f'{url}',
-            'Positive': f'{sentiment_scores['pos']}',
+            'Positive': '{x}'.format(x = sentiment_scores['pos']),
             'Negative': f'{sentiment_scores['neg']}',
             'Neutral': f'{sentiment_scores['neu']}',
             'Compound': f'{sentiment_scores['compound']}'
