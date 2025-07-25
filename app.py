@@ -18,7 +18,7 @@ st.subheader('Created by: Jared Heiner, Page last updated on 7/25/2025')
 
 
 
-ticker_list = pd.read_csv(r'/ticker_list.csv')
+ticker_list = pd.read_csv(r'ticker_list.csv')
 st.sidebar.title('User Inputs')
 ticker = st.sidebar.selectbox(label='Select a stock symbol',
                               options=ticker_list['Symbol'].unique(),
