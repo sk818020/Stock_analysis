@@ -126,9 +126,9 @@ with tab2:
             'Title': f'{title[0:35]}...',
             'Link': f'{url}',
             'Positive': '{x}'.format(x = sentiment_scores['pos']),
-            'Negative': f'{sentiment_scores['neg']}',
-            'Neutral': f'{sentiment_scores['neu']}',
-            'Compound': f'{sentiment_scores['compound']}'
+            'Negative': '{y}'.format(y = sentiment_scores['neg']),
+            'Neutral': '{z}'.format(z = entiment_scores['neu']),
+            'Compound': '{w}'.format(w = sentiment_scores['compound'])
         }
         holder = pd.DataFrame(data_news, index=[0])
         df_news = pd.concat([df_news, holder], ignore_index=True)
