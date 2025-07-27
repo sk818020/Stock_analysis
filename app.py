@@ -5,7 +5,11 @@ import matplotlib.pyplot as plt
 import plotly_express as px
 from nltk.sentiment import SentimentIntensityAnalyzer
 import nltk
+from streamlit_plotly_events import plotly_events
 from streamlit import title
+from stockdex import Ticker
+import plotly
+from streamlit_extras.stylable_container import stylable_container
 
 # Establishing sentiment analyzer parameters
 nltk.download('vader_lexicon')
@@ -13,48 +17,84 @@ sia= SentimentIntensityAnalyzer()
 
 # Page layout and title
 st.set_page_config(layout = 'wide')
-st.title('Stock Analysis')
-st.subheader('Created by: Jared Heiner, Page last updated on 7/25/2025')
 
 
+st.markdown("<h1 style='font-size:45px;'>Stock Analysis</h1",
+            unsafe_allow_html = True)
+st.markdown("<h2 style='font-size:15px;'><p1>Created by <a href='mailto:jared.m.heiner@gmail.com'>Jared Heiner</a></p1></h2>\n"
+            "<h2 style='font-size:15px;'>Last Updated: 7/25/2025</h2>",
+            unsafe_allow_html=True)
+st.divider()
 
+# Get ticker data
 ticker_list = pd.read_csv(r'ticker_list.csv')
+
+# Create side bar
 st.sidebar.title('User Inputs')
 ticker = st.sidebar.selectbox(label='Select a stock symbol',
                               options=ticker_list['Symbol'].unique(),
                               index = 1586)
+    
+    
+    
+    
+def clean_data(sym_con):
+    clean_df = sym_con.income_stmt.reset_index().copy()
+    clean_df = clean_df.melt(id_vars = ['index'])
+    clean_df.columns = ['IS_Category', 'Date', '$_amount']
+    clean_df['Date'] = pd.to_datetime(clean_df['Date'])
+    return clean_df
+
+
+# Get connection to the stock symbol and define variables
 sym_con = yf.Ticker(ticker)
 sector = sym_con.info['sector']
+industry = sym_con.info['industry']
 industries = pd.DataFrame(yf.Sector(sector.lower().replace(' ', '-')).industries)
-
-def clean_data(sym_con):
-    inc_stmt = sym_con.income_stmt.reset_index().copy()
-    inc_stmt = inc_stmt.melt(id_vars = ['index'])
-    inc_stmt.columns = ['IS_Category', 'Date', '$_amount']
-    inc_stmt['Date'] = pd.to_datetime(inc_stmt['Date'])
-    return inc_stmt
-
 data = clean_data(sym_con)
-
 is_item = st.sidebar.selectbox(label = 'Income statement category:',
                                options = data['IS_Category'].unique(),
                                index = 21)
 industry = st.sidebar.selectbox('Select the comparator industry',
                                 options = industries.index)
 industries_sym = industries.loc[industry, 'symbol']
-#industry_sym = industries
 
+# Develop top of page (above graphs)
+top_col1, top_col2 = st.columns(2)
+with top_col1:
+    st.subheader('Company Overview ')
+    st.write(' ')
+    st.markdown(f"__Company Name:__ {sym_con.info['shortName']}")
+    st.markdown(f"__Sector__: {sym_con.info['sector']}")
+    st.markdown(f"__Industry__: {sym_con.info['industry']}")
+    st.markdown(f"__Website:__ [{sym_con.info['shortName']}]({sym_con.info['website']})")
+    st.markdown(f"__Investor Relations Website:__ [{sym_con.info['shortName']}]({sym_con.info['irWebsite']})")
+    st.markdown(f"__Beta__: {sym_con.info['beta']}")
+    st.markdown(f"__Market Cap__: ${round(sym_con.info['marketCap']/1000000000,1):,.1f} billion")
+    st.markdown(f"__Avg. Analyst Rating__: {sym_con.info['averageAnalystRating']}")
+with top_col2:
+    sankey = Ticker(ticker = 'XOM')
+    fig = sankey.plot_yahoo_api_financials()
+    st.plotly_chart(fig)
+
+# Create Tabs
 tab1, tab2 = st.tabs(['Stock Basics', 'Market Information'])
 
 with tab1:
     col1, col2 = st.columns([7,5])
 
     with col1:
+        st.markdown(f'__{ticker} - stock price past year with moving average__')
         stock_data = sym_con.history(period = '1y').reset_index()
         stock_data['Date'] = pd.to_datetime(stock_data['Date'])
-        fig_price_plot = px.line(stock_data, x = 'Date',
-                                 y = 'Close',
-                                 title = f'{ticker} - Daily Stock Price - Past Year')
+        day_avg = st.number_input('# of days for moving average',
+                                  min_value = int(5),
+                                  max_value=int(len(stock_data)*.75),
+                                  value = int(30))
+        stock_data['Rolling_Average'] = stock_data['Close'].rolling(window = day_avg).mean()
+        fig_price_plot = px.line(stock_data,
+                                 x = 'Date',
+                                 y = ['Rolling_Average', 'Close'])
         st.plotly_chart(fig_price_plot)
         is_items_table = pd.DataFrame(sym_con.income_stmt.reset_index())
         filter_list = ['Total Revenue', 'Cost Of Revenue', 'Total Expenses',
@@ -72,7 +112,7 @@ with tab1:
         st.markdown('__Selected Income Statement Line by Year__')
         st.data_editor(data.query(f"IS_Category == '{is_item}'"), hide_index=True)
 
-    col_news1, col_news2 = st.columns([10,2])
+    col_news1, col_news2 = st.columns([9,3])
 
 
 with tab2:
@@ -126,8 +166,9 @@ with tab2:
             'Link': f'{url}',
             'Positive': '{x}'.format(x = sentiment_scores['pos']),
             'Negative': '{y}'.format(y = sentiment_scores['neg']),
-            'Neutral': '{z}'.format(z = sentiment_scores['neu']),
-            'Compound': '{w}'.format(w = sentiment_scores['compound'])
+ #           'Neutral': '{z}'.format(z = sentiment_scores['neu']),
+ #           'Compound': '{w}'.format(w = sentiment_scores['compound'])
+
         }
         holder = pd.DataFrame(data_news, index=[0])
         df_news = pd.concat([df_news, holder], ignore_index=True)
