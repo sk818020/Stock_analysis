@@ -68,7 +68,10 @@ with top_col1:
     st.markdown(f"__Sector__: {sym_con.info['sector']}")
     st.markdown(f"__Industry__: {sym_con.info['industry']}")
     st.markdown(f"__Website:__ [{sym_con.info['shortName']}]({sym_con.info['website']})")
-    st.markdown(f"__Investor Relations Website:__ [{sym_con.info['shortName']}]({sym_con.info['irWebsite']})")
+    try:
+        st.markdown(f"__Investor Relations Website:__ [{sym_con.info['shortName']}]({sym_con.info['irWebsite']})")
+    except:
+        st.write()
     st.markdown(f"__Beta__: {sym_con.info['beta']}")
     st.markdown(f"__Market Cap__: ${round(sym_con.info['marketCap']/1000000000,1):,.1f} billion")
     st.markdown(f"__Avg. Analyst Rating__: {sym_con.info['averageAnalystRating']}")
