@@ -116,11 +116,15 @@ with col7:
 with col8:
     holder = pd.DataFrame(data_news, index=[0])
     df_news = pd.concat([df_news, holder], ignore_index=True)
-    fig = px.scatter(df_news,
-                  x = 'Date',
-                  y = ['Positive', 'Negative'],
-                  title = 'Plot of Positive / Negative Values',
-                  hover_name='Title', height = 573)
+    df_news = pd.melt(df_news, id_vars=['Date', 'Title', 'Link'])
+    df_news['value'] = df_news['value'].astype(float)
+    df_news = df_news.rename(columns={'variable': 'PosNeg'})
+    df_news_groups = df_news.groupby(['PosNeg']).agg({'value': 'mean'})
+    fig = px.bar(df_news_groups.reset_index(),
+                 y ='value',
+                 x = 'PosNeg',
+                 title = 'Average positive / negative value',
+                 height = 551)
     fig.update_layout(
         xaxis_title='',
         yaxis_title=''

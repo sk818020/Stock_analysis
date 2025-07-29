@@ -27,8 +27,6 @@ st.session_state['ticker'] = st.sidebar.selectbox(label='Select a stock symbol',
                               options=ticker_list['Symbol'].unique(),
                               index = 1586)
 
-
-
 def clean_data(sym_con):
     clean_df = sym_con.income_stmt.reset_index().copy()
     clean_df = clean_df.melt(id_vars = ['index'])
