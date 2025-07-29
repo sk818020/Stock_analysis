@@ -124,7 +124,7 @@ with col8:
                  y ='value',
                  x = 'PosNeg',
                  title = 'Average positive / negative value',
-                 height = 551)
+                 height = 550   )
     fig.update_layout(
         xaxis_title='',
         yaxis_title=''
